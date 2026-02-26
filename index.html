@@ -3,194 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deliverzen Operations Dashboard</title>
+    <title>Deliverzen Operations Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #F8FAFB; color: #0D2C54; padding: 20px; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; background: #E9F1FB; color: #0B1B3A; }
         .container { max-width: 1600px; margin: 0 auto; }
-        .header { background: #0D2C54; color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; }
-        .header h1 { font-size: 32px; margin-bottom: 8px; }
-        .header p { opacity: 0.8; font-size: 16px; }
-        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-        .logo-icon { width: 50px; height: 40px; background: linear-gradient(135deg, #5A9CFE, #6DD5DB); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; }
-        .btn { background: white; color: #0D2C54; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; }
-        .btn:hover { background: #6DD5DB; color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .filters { background: white; padding: 24px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: end; }
-        .filter-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #0D2C54; font-size: 14px; }
-        .filter-group select { width: 100%; padding: 12px; border: 1px solid #E1E8ED; border-radius: 8px; font-size: 14px; background: white; }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 30px; }
-        .chart-card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .chart-card h3 { margin-bottom: 16px; color: #0D2C54; font-size: 18px; }
-        .chart-canvas { position: relative; height: 300px; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 30px; }
-        .kpi-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; overflow: hidden; transition: transform 0.3s; }
-        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-        .kpi-card.green::before { background: #0EA55B; }
-        .kpi-card.yellow::before { background: #D97B06; }
-        .kpi-card.red::before { background: #DC2C2C; }
-        .kpi-card.insufficient::before { background: #95A5B8; }
-        .kpi-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
-        .kpi-category { font-size: 12px; font-weight: 700; color: #5C6C7E; text-transform: uppercase; }
-        .kpi-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .kpi-badge.green { background: rgba(14, 165, 91, 0.1); color: #0EA55B; }
-        .kpi-badge.yellow { background: rgba(217, 123, 6, 0.1); color: #D97B06; }
-        .kpi-badge.red { background: rgba(220, 44, 44, 0.1); color: #DC2C2C; }
-        .kpi-badge.insufficient { background: rgba(149, 165, 184, 0.1); color: #95A5B8; }
-        .kpi-value { font-size: 48px; font-weight: 700; color: #0D2C54; margin-bottom: 8px; }
-        .kpi-label { font-size: 14px; color: #5C6C7E; margin-bottom: 16px; }
-        .kpi-footer { display: flex; justify-content: space-between; padding-top: 16px; border-top: 1px solid #E1E8ED; font-size: 13px; }
+        
+        /* Header */
+        .header { background: #0B1B3A; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+        .logo-section { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 30px; height: 30px; background: linear-gradient(135deg, #5A9CFE, #6DD5DB); border-radius: 6px; }
+        .logo-text { font-size: 19px; font-weight: 800; color: #FFF; letter-spacing: -0.02em; }
+        .badge { font-size: 10px; background: rgba(43,108,244,0.2); color: #4A8AF7; padding: 3px 11px; border-radius: 20px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+        .header-info { display: flex; align-items: center; gap: 20px; font-size: 12px; color: #8FA3C4; }
+        
+        /* Tabs */
+        .tabs { background: #FFF; border-bottom: 1px solid #D4DEF0; padding: 0 32px; display: flex; }
+        .tab { background: transparent; color: #8494AC; border: none; border-bottom: 2.5px solid transparent; padding: 13px 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.2s; }
+        .tab:hover { color: #2B6CF4; }
+        .tab.active { color: #2B6CF4; border-bottom-color: #2B6CF4; }
+        
+        /* Filters */
+        .filters { padding: 14px 32px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; background: #FFF; border-bottom: 1px solid #E4ECF7; }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 10px; color: #8494AC; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+        .filter-group select, .filter-group input { background: #FFF; color: #0B1B3A; border: 1.5px solid #D4DEF0; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .filter-group select { padding-right: 34px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A5B78' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .filter-group input[type="date"] { cursor: text; }
+        .sla-legend { display: flex; gap: 14px; align-items: center; padding: 6px 16px; background: #FFF; border-radius: 10px; border: 1px solid #E4ECF7; margin-left: auto; }
+        .sla-item { display: flex; align-items: center; gap: 5px; }
+        .sla-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .btn-export { background: #0B1B3A; color: #FFF; border: none; border-radius: 10px; padding: 9px 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+        
+        /* Content */
+        .content { padding: 32px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Alert */
         .alert { padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid; }
         .alert.success { background: #D4EDDA; border-left-color: #0EA55B; color: #155724; }
         .alert.error { background: #F8D7DA; border-left-color: #DC2C2C; color: #721C24; }
         .alert-title { font-weight: 700; margin-bottom: 8px; }
-        .footer { text-align: center; padding: 30px; color: #5C6C7E; font-size: 14px; }
+        
+        /* KPI Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 30px; }
+        .kpi-card { background: #FFF; border-radius: 16px; padding: 22px 24px; border: 1px solid #E4ECF7; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(11,27,58,0.04), 0 4px 12px rgba(11,27,58,0.02); transition: transform 0.3s; cursor: pointer; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(11,27,58,0.15); }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .kpi-card.green::before { background: #0EA55B; }
+        .kpi-card.yellow::before { background: #D97B06; }
+        .kpi-card.red::before { background: #DC2C2C; }
+        .kpi-card.insufficient::before { background: #95A5B8; }
+        .kpi-category { font-size: 11px; color: #8494AC; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+        .kpi-value { font-size: 36px; font-weight: 800; color: #0B1B3A; line-height: 1; letter-spacing: -0.02em; margin-bottom: 8px; }
+        .kpi-unit { font-size: 16px; color: #4A5B78; font-weight: 600; margin-left: 3px; }
+        .kpi-label { font-size: 14px; color: #5C6C7E; margin-bottom: 16px; }
+        .kpi-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(14, 165, 91, 0.1); padding: 3px 11px; border-radius: 20px; }
+        .kpi-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .kpi-badge .text { font-size: 11px; font-weight: 700; }
+        
+        /* Charts */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 30px; }
+        .chart-card { background: #FFF; padding: 24px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .chart-card h3 { margin-bottom: 16px; color: #0B1B3A; font-size: 16px; font-weight: 700; }
+        .chart-canvas { position: relative; height: 300px; }
+        
+        /* Tables */
+        .table-card { background: #FFF; padding: 24px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        .table-card h3 { margin-bottom: 16px; color: #0B1B3A; font-size: 16px; font-weight: 700; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+        thead th { text-align: left; padding: 6px 16px; font-size: 11px; color: #8494AC; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 2px solid #D4DEF0; }
+        tbody tr { background: #F5F8FD; }
+        tbody tr:hover { background: #EBF2FE; }
+        tbody td { padding: 12px 16px; font-size: 13px; color: #4A5B78; }
+        tbody td:first-child { font-weight: 700; color: #0B1B3A; border-radius: 8px 0 0 8px; }
+        tbody td:last-child { border-radius: 0 8px 8px 0; }
+        tbody td.number { font-family: 'JetBrains Mono', monospace; text-align: right; }
+        
+        /* Section */
+        .section { margin-bottom: 30px; }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .section-title { font-size: 16px; color: #0B1B3A; font-weight: 700; }
+        .section-line { flex: 1; height: 1px; background: #D4DEF0; }
+        
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11,27,58,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #FFF; border-radius: 20px; max-width: 900px; width: 100%; max-height: 85vh; overflow: auto; box-shadow: 0 24px 64px rgba(11,27,58,0.2); }
+        .modal-header { padding: 20px 28px; border-bottom: 1px solid #E4ECF7; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #FFF; border-radius: 20px 20px 0 0; z-index: 1; }
+        .modal-title { font-size: 18px; font-weight: 800; color: #0B1B3A; }
+        .modal-close { background: none; border: 1.5px solid #D4DEF0; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; color: #8494AC; font-weight: 700; }
+        .modal-body { padding: 24px 28px; }
+        
+        /* Insufficient Data */
         .insufficient-data { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #95A5B8; }
         .insufficient-data-icon { font-size: 48px; margin-bottom: 16px; }
         .insufficient-data-text { font-size: 16px; font-weight: 600; }
         .insufficient-data-subtext { font-size: 14px; margin-top: 8px; }
+        
+        /* Footer */
+        .footer { max-width: 1440px; margin: 40px auto 0; padding: 18px 32px; border-top: 1px solid #D4DEF0; display: flex; justify-content: space-between; align-items: center; }
+        .footer-left { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #8494AC; font-weight: 600; }
+        .footer-right { font-size: 11px; color: #8494AC; }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="logo">
-                <div class="logo-icon">DZ</div>
-                <div>
-                    <h1>Deliverzen Operations Intelligence</h1>
-                    <p id="subtitle">Executive Summary Dashboard</p>
-                </div>
+            <div class="logo-section">
+                <div class="logo"></div>
+                <span class="logo-text">Deliverzen</span>
+                <span class="badge">Operations Hub</span>
+            </div>
+            <div class="header-info">
+                <span>445 S Royal Ln, Coppell TX</span>
+                <span>|</span>
+                <span id="header-date"></span>
             </div>
         </div>
 
-        <!-- Connection Status -->
-        <div id="connection-status"></div>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="overview">📊 Warehouse Overview</button>
+            <button class="tab" data-tab="fulfillment">⚡ Fulfillment Control</button>
+            <button class="tab" data-tab="customers">👥 Customer Performance</button>
+            <button class="tab" data-tab="inventory">📦 Inventory</button>
+        </div>
 
         <!-- Filters -->
         <div class="filters">
-            <div class="filter-grid">
-                <div class="filter-group">
-                    <label>Customer</label>
-                    <select id="customerFilter">
-                        <option value="">All Customers</option>
-                    </select>
+            <div class="filter-group">
+                <label>Customer</label>
+                <select id="customerFilter">
+                    <option value="">All Customers</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Channel</label>
+                <select id="channelFilter">
+                    <option value="">All Channels</option>
+                    <option value="D2C">D2C</option>
+                    <option value="B2B">B2B</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date Range</label>
+                <select id="dateRangeFilter">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <div class="filter-group" id="customDateGroup" style="display: none;">
+                <label>Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="filter-group" id="customDateGroup2" style="display: none;">
+                <label>End Date</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="sla-legend">
+                <div class="sla-item">
+                    <div class="sla-dot" style="background: #0EA55B;"></div>
+                    <span style="font-size: 11px; color: #4A5B78; font-weight: 600;">Meeting SLA</span>
                 </div>
-                <div class="filter-group">
-                    <label>Date Range</label>
-                    <select id="dateRangeFilter">
-                        <option value="7">Last 7 Days</option>
-                        <option value="30" selected>Last 30 Days</option>
-                        <option value="90">Last 90 Days</option>
-                    </select>
+                <div class="sla-item">
+                    <div class="sla-dot" style="background: #D97B06;"></div>
+                    <span style="font-size: 11px; color: #4A5B78; font-weight: 600;">At Risk</span>
                 </div>
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button class="btn" onclick="applyFilters()">🔄 Apply Filters</button>
+                <div class="sla-item">
+                    <div class="sla-dot" style="background: #DC2C2C;"></div>
+                    <span style="font-size: 11px; color: #4A5B78; font-weight: 600;">Failing</span>
+                </div>
+            </div>
+            <button class="btn-export" onclick="exportData()">↓ Export</button>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div id="connection-status"></div>
+
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">Key Performance Indicators</span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="kpi-grid" id="kpi-grid"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">Volume Trends</span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Orders by Day</h3>
+                            <div class="chart-canvas">
+                                <canvas id="dailyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Orders by Month</h3>
+                            <div class="chart-canvas">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>D2C vs B2B Breakdown</h3>
+                            <div class="chart-canvas">
+                                <canvas id="breakdownChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fulfillment Tab -->
+            <div id="fulfillment-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">Fulfillment Performance</span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Daily Fulfillment Rate</h3>
+                            <div class="chart-canvas">
+                                <canvas id="fulfillmentDailyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Orders by Status</h3>
+                            <div class="chart-canvas">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Tab -->
+            <div id="customers-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">Client Performance Snapshot</span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="table-card">
+                        <table id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th class="number">Total Orders</th>
+                                    <th class="number">D2C Orders</th>
+                                    <th class="number">B2B Orders</th>
+                                    <th class="number">D2C OTF %</th>
+                                    <th class="number">B2B OTF %</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div id="inventory-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">Inventory Summary</span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="kpi-grid" id="inventory-kpis"></div>
                 </div>
             </div>
         </div>
-
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>📊 Orders by Day</h3>
-                <div class="chart-canvas">
-                    <canvas id="dailyChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h3>📈 Orders by Month</h3>
-                <div class="chart-canvas">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h3>🎯 D2C vs B2B Breakdown</h3>
-                <div class="chart-canvas">
-                    <canvas id="breakdownChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- KPIs -->
-        <h2 style="margin-bottom: 20px; color: #0D2C54;">Executive KPIs</h2>
-        <div class="kpi-grid" id="kpi-grid"></div>
 
         <!-- Footer -->
         <div class="footer">
-            <p><strong>Deliverzen Operations Intelligence Platform v2.1</strong></p>
-            <p style="margin-top: 8px;">Last updated: <span id="last-updated">Loading...</span></p>
+            <div class="footer-left">
+                <div class="logo" style="width: 20px; height: 20px;"></div>
+                <span>Deliverzen Operations Hub</span>
+                <span>•</span>
+                <span>Powered by ShipHero</span>
+            </div>
+            <div class="footer-right">
+                Last updated: <span id="last-updated">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for drill-downs -->
+    <div class="modal" id="drillModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle"></span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
     <script>
         const API_URL = 'https://deliverzen-ops-backend.azurewebsites.net';
-        let dailyChart, monthlyChart, breakdownChart;
-        let currentFilters = { customer_id: '', days: 30 };
+        let dailyChart, monthlyChart, breakdownChart, fulfillmentChart, statusChart;
+        let currentFilters = { customer_id: '', channel: '', days: 30, startDate: null, endDate: null };
+        let customerData = [];
 
-        // Format value
-        function formatValue(value, format) {
-            if (value === null || value === undefined) return 'Insufficient Data';
-            switch (format) {
-                case 'percent': return `${(value * 100).toFixed(1)}%`;
-                case 'currency': return `$${value.toFixed(0)}`;
-                case 'days': return value.toString();
-                case 'number':
-                default: return value.toFixed(1);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadDashboard();
+            document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        });
+
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+
+            // Date range change
+            document.getElementById('dateRangeFilter').addEventListener('change', function() {
+                const customGroups = document.querySelectorAll('#customDateGroup, #customDateGroup2');
+                if (this.value === 'custom') {
+                    customGroups.forEach(g => g.style.display = 'flex');
+                } else {
+                    customGroups.forEach(g => g.style.display = 'none');
+                    applyFilters();
+                }
+            });
+
+            // Custom date inputs
+            ['startDate', 'endDate'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            // Other filters
+            ['customerFilter', 'channelFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        async function loadDashboard() {
+            try {
+                // Check backend health
+                const healthResponse = await fetch(`${API_URL}/api/health`);
+                const healthData = await healthResponse.json();
+                
+                if (healthData.status === 'healthy') {
+                    document.getElementById('connection-status').innerHTML = `
+                        <div class="alert success">
+                            <div class="alert-title">✓ Backend Connected</div>
+                            <div>Snowflake: ${healthData.snowflake_connected ? 'Connected' : 'Disconnected'} | Timezone: ${healthData.timezone}</div>
+                        </div>
+                    `;
+                    
+                    await Promise.all([
+                        loadCustomers(),
+                        loadKPIs(),
+                        loadCharts(),
+                        loadCustomerBreakdown()
+                    ]);
+                } else {
+                    throw new Error('Backend unhealthy');
+                }
+            } catch (error) {
+                console.error('Dashboard load failed:', error);
+                document.getElementById('connection-status').innerHTML = `
+                    <div class="alert error">
+                        <div class="alert-title">✗ Backend Connection Failed</div>
+                        <div>${error.message}</div>
+                    </div>
+                `;
             }
         }
 
-        // Create KPI card
-        function createKPICard(kpi) {
-            const statusText = kpi.status === 'green' ? 'On Track' : 
-                             kpi.status === 'yellow' ? 'At Risk' : 
-                             kpi.status === 'red' ? 'Below Target' : 'Insufficient Data';
-            const changePercent = kpi.changePercent ? (Math.abs(kpi.changePercent) * 100).toFixed(1) : '0.0';
-            const arrow = kpi.changePercent > 0 ? '↑' : '↓';
-            const trendClass = kpi.changePercent > 0 ? 'up' : 'down';
-            const sign = kpi.changePercent > 0 ? '+' : '-';
-
-            return `
-                <div class="kpi-card ${kpi.status}">
-                    <div class="kpi-header">
-                        <div class="kpi-category">${kpi.category}</div>
-                        <div class="kpi-badge ${kpi.status}">${statusText}</div>
-                    </div>
-                    <div class="kpi-value">${formatValue(kpi.value, kpi.format)}</div>
-                    <div class="kpi-label">${kpi.label}</div>
-                    ${kpi.changePercent !== null ? `
-                    <div class="kpi-footer">
-                        <div class="kpi-trend ${trendClass}">${arrow} ${sign}${changePercent}%</div>
-                        <div style="color: #5C6C7E;">vs last period</div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // Show insufficient data
-        function showInsufficientData(elementId, dataType) {
-            const element = document.getElementById(elementId);
-            if (!element) return;
-            
-            const canvas = element.querySelector('canvas');
-            if (!canvas) return;
-            
-            const parent = canvas.parentElement;
-            parent.innerHTML = `
-                <div class="insufficient-data">
-                    <div class="insufficient-data-icon">📊</div>
-                    <div class="insufficient-data-text">Insufficient Data</div>
-                    <div class="insufficient-data-subtext">No ${dataType} available for selected filters</div>
-                </div>
-            `;
-        }
-
-        // Load customers
         async function loadCustomers() {
             try {
                 const response = await fetch(`${API_URL}/api/customers`);
@@ -198,6 +409,7 @@
                 
                 if (data.success && data.data) {
                     const select = document.getElementById('customerFilter');
+                    select.innerHTML = '<option value="">All Customers</option>';
                     data.data.forEach(customer => {
                         const option = document.createElement('option');
                         option.value = customer.ACCOUNT_ID;
@@ -211,96 +423,29 @@
             }
         }
 
-        // Apply filters
         async function applyFilters() {
-            currentFilters.customer_id = document.getElementById('customerFilter').value;
-            currentFilters.days = document.getElementById('dateRangeFilter').value;
+            const dateRange = document.getElementById('dateRangeFilter').value;
             
-            await Promise.all([loadCharts(), loadKPIs()]);
-        }
-
-        // Load charts
-        async function loadCharts() {
-            try {
-                const params = new URLSearchParams({ days: currentFilters.days });
-                if (currentFilters.customer_id) params.append('customer_id', currentFilters.customer_id);
+            if (dateRange === 'custom') {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                if (!startDate || !endDate) return;
                 
-                // Daily chart
-                const dailyResponse = await fetch(`${API_URL}/api/orders-by-day?${params}`);
-                const dailyData = await dailyResponse.json();
-                
-                if (!dailyData.success || !dailyData.data || dailyData.data.length === 0) {
-                    showInsufficientData('dailyChart', 'daily order data');
-                } else {
-                    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-                    if (dailyChart) dailyChart.destroy();
-                    
-                    dailyChart = new Chart(dailyCtx, {
-                        type: 'line',
-                        data: {
-                            labels: dailyData.data.map(d => d.ORDER_DATE),
-                            datasets: [
-                                { label: 'Total Orders', data: dailyData.data.map(d => d.TOTAL_ORDERS), borderColor: '#0D2C54', backgroundColor: 'rgba(13,44,84,0.1)', tension: 0.4 },
-                                { label: 'D2C Orders', data: dailyData.data.map(d => d.D2C_ORDERS), borderColor: '#5A9CFE', backgroundColor: 'rgba(90,156,254,0.1)', tension: 0.4 },
-                                { label: 'B2B Orders', data: dailyData.data.map(d => d.B2B_ORDERS), borderColor: '#6DD5DB', backgroundColor: 'rgba(109,213,219,0.1)', tension: 0.4 }
-                            ]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-                    });
-                }
-                
-                // Monthly chart
-                const monthlyResponse = await fetch(`${API_URL}/api/orders-by-month?months=12${currentFilters.customer_id ? '&customer_id=' + currentFilters.customer_id : ''}`);
-                const monthlyData = await monthlyResponse.json();
-                
-                if (!monthlyData.success || !monthlyData.data || monthlyData.data.length === 0) {
-                    showInsufficientData('monthlyChart', 'monthly order data');
-                } else {
-                    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-                    if (monthlyChart) monthlyChart.destroy();
-                    
-                    monthlyChart = new Chart(monthlyCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: monthlyData.data.map(d => d.ORDER_MONTH),
-                            datasets: [
-                                { label: 'D2C Orders', data: monthlyData.data.map(d => d.D2C_ORDERS), backgroundColor: '#5A9CFE' },
-                                { label: 'B2B Orders', data: monthlyData.data.map(d => d.B2B_ORDERS), backgroundColor: '#6DD5DB' }
-                            ]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
-                    });
-                }
-                
-                // Breakdown pie chart
-                if (dailyData.success && dailyData.data && dailyData.data.length > 0) {
-                    const totalD2C = dailyData.data.reduce((sum, d) => sum + d.D2C_ORDERS, 0);
-                    const totalB2B = dailyData.data.reduce((sum, d) => sum + d.B2B_ORDERS, 0);
-                    
-                    const breakdownCtx = document.getElementById('breakdownChart').getContext('2d');
-                    if (breakdownChart) breakdownChart.destroy();
-                    
-                    breakdownChart = new Chart(breakdownCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['D2C', 'B2B'],
-                            datasets: [{ data: [totalD2C, totalB2B], backgroundColor: ['#5A9CFE', '#6DD5DB'] }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-                    });
-                } else {
-                    showInsufficientData('breakdownChart', 'breakdown data');
-                }
-                
-            } catch (error) {
-                console.error('Chart loading failed:', error);
-                showInsufficientData('dailyChart', 'chart data');
-                showInsufficientData('monthlyChart', 'chart data');
-                showInsufficientData('breakdownChart', 'chart data');
+                currentFilters.startDate = startDate;
+                currentFilters.endDate = endDate;
+                currentFilters.days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+            } else {
+                currentFilters.days = parseInt(dateRange);
+                currentFilters.startDate = null;
+                currentFilters.endDate = null;
             }
+            
+            currentFilters.customer_id = document.getElementById('customerFilter').value;
+            currentFilters.channel = document.getElementById('channelFilter').value;
+            
+            await Promise.all([loadKPIs(), loadCharts(), loadCustomerBreakdown()]);
         }
 
-        // Load KPIs
         async function loadKPIs() {
             try {
                 const params = new URLSearchParams({ days: currentFilters.days });
@@ -312,49 +457,202 @@
                 if (data.success && data.data) {
                     document.getElementById('kpi-grid').innerHTML = data.data.map(kpi => createKPICard(kpi)).join('');
                     document.getElementById('last-updated').textContent = new Date().toLocaleString();
-                    
-                    if (data.metadata && data.metadata.total_orders !== undefined) {
-                        document.getElementById('subtitle').textContent = 
-                            `Executive Summary Dashboard - ${data.metadata.total_orders} orders (last ${data.metadata.days_back} days)`;
-                    }
                 }
             } catch (error) {
                 console.error('KPI loading failed:', error);
             }
         }
 
-        // Load dashboard data
-        async function loadDashboardData() {
+        function createKPICard(kpi) {
+            const value = kpi.value !== null && kpi.value !== undefined ? formatValue(kpi.value, kpi.format) : 'Insufficient Data';
+            const statusClass = kpi.status || 'insufficient';
+            const statusText = kpi.status === 'green' ? 'On Track' : 
+                             kpi.status === 'yellow' ? 'At Risk' : 
+                             kpi.status === 'red' ? 'Below Target' : 'Insufficient Data';
+            const badgeColor = kpi.status === 'green' ? '#0EA55B' : 
+                              kpi.status === 'yellow' ? '#D97B06' : 
+                              kpi.status === 'red' ? '#DC2C2C' : '#95A5B8';
+            const badgeBg = kpi.status === 'green' ? 'rgba(14, 165, 91, 0.1)' : 
+                           kpi.status === 'yellow' ? 'rgba(217, 123, 6, 0.1)' : 
+                           kpi.status === 'red' ? 'rgba(220, 44, 44, 0.1)' : 'rgba(149, 165, 184, 0.1)';
+            
+            return `
+                <div class="kpi-card ${statusClass}" onclick="drillDown('${kpi.metric}')">
+                    <div class="kpi-category">${kpi.category}</div>
+                    <div class="kpi-value">${value}</div>
+                    <div class="kpi-label">${kpi.label}</div>
+                    <div class="kpi-badge" style="background: ${badgeBg};">
+                        <span class="dot" style="background: ${badgeColor};"></span>
+                        <span class="text" style="color: ${badgeColor};">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatValue(value, format) {
+            switch (format) {
+                case 'percent': return `${(value * 100).toFixed(1)}%`;
+                case 'currency': return `$${value.toFixed(0)}`;
+                case 'days': return value.toString();
+                case 'number':
+                default: return value.toFixed(1);
+            }
+        }
+
+        async function loadCharts() {
             try {
-                const healthResponse = await fetch(`${API_URL}/api/health`);
-                const healthData = await healthResponse.json();
+                const params = new URLSearchParams({ days: currentFilters.days });
+                if (currentFilters.customer_id) params.append('customer_id', currentFilters.customer_id);
                 
-                if (healthData.status === 'healthy') {
-                    document.getElementById('connection-status').innerHTML = `
-                        <div class="alert success">
-                            <div class="alert-title">✓ Backend Connected</div>
-                            <div>Snowflake: ${healthData.snowflake_connected ? 'Connected' : 'Disconnected'} | Timezone: ${healthData.timezone}</div>
-                        </div>
-                    `;
+                // Daily chart
+                const dailyResponse = await fetch(`${API_URL}/api/orders-by-day?${params}`);
+                const dailyData = await dailyResponse.json();
+                
+                if (dailyData.success && dailyData.data && dailyData.data.length > 0) {
+                    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+                    if (dailyChart) dailyChart.destroy();
                     
-                    await Promise.all([loadCustomers(), loadCharts(), loadKPIs()]);
+                    dailyChart = new Chart(dailyCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dailyData.data.map(d => d.ORDER_DATE),
+                            datasets: [
+                                { label: 'Total Orders', data: dailyData.data.map(d => d.TOTAL_ORDERS), borderColor: '#0B1B3A', backgroundColor: 'rgba(13,44,84,0.1)', tension: 0.4, fill: true },
+                                { label: 'D2C', data: dailyData.data.map(d => d.D2C_ORDERS), borderColor: '#2B6CF4', backgroundColor: 'rgba(43,108,244,0.1)', tension: 0.4, fill: true },
+                                { label: 'B2B', data: dailyData.data.map(d => d.B2B_ORDERS), borderColor: '#6DD5DB', backgroundColor: 'rgba(109,213,219,0.1)', tension: 0.4, fill: true }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+                    });
                 } else {
-                    throw new Error('Backend unhealthy');
+                    showInsufficientData('dailyChart', 'daily order data');
+                }
+                
+                // Monthly chart
+                const monthlyResponse = await fetch(`${API_URL}/api/orders-by-month?months=12${currentFilters.customer_id ? '&customer_id=' + currentFilters.customer_id : ''}`);
+                const monthlyData = await monthlyResponse.json();
+                
+                if (monthlyData.success && monthlyData.data && monthlyData.data.length > 0) {
+                    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+                    if (monthlyChart) monthlyChart.destroy();
+                    
+                    monthlyChart = new Chart(monthlyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: monthlyData.data.map(d => d.ORDER_MONTH),
+                            datasets: [
+                                { label: 'D2C', data: monthlyData.data.map(d => d.D2C_ORDERS), backgroundColor: '#2B6CF4' },
+                                { label: 'B2B', data: monthlyData.data.map(d => d.B2B_ORDERS), backgroundColor: '#6DD5DB' }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+                    });
+                } else {
+                    showInsufficientData('monthlyChart', 'monthly order data');
+                }
+                
+                // Breakdown chart
+                if (dailyData.success && dailyData.data && dailyData.data.length > 0) {
+                    const totalD2C = dailyData.data.reduce((sum, d) => sum + d.D2C_ORDERS, 0);
+                    const totalB2B = dailyData.data.reduce((sum, d) => sum + d.B2B_ORDERS, 0);
+                    
+                    const breakdownCtx = document.getElementById('breakdownChart').getContext('2d');
+                    if (breakdownChart) breakdownChart.destroy();
+                    
+                    breakdownChart = new Chart(breakdownCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['D2C', 'B2B'],
+                            datasets: [{ data: [totalD2C, totalB2B], backgroundColor: ['#2B6CF4', '#6DD5DB'] }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    });
                 }
             } catch (error) {
-                console.error('Dashboard load failed:', error);
-                document.getElementById('connection-status').innerHTML = `
-                    <div class="alert error">
-                        <div class="alert-title">✗ Backend Connection Failed</div>
-                        <div>Make sure backend is running: python app.py</div>
-                    </div>
+                console.error('Chart loading failed:', error);
+                showInsufficientData('dailyChart', 'chart data');
+                showInsufficientData('monthlyChart', 'chart data');
+            }
+        }
+
+        async function loadCustomerBreakdown() {
+            try {
+                const params = new URLSearchParams({ days: currentFilters.days });
+                
+                const response = await fetch(`${API_URL}/api/customer-breakdown?${params}`);
+                const data = await response.json();
+                
+                if (!data.success || !data.data || data.data.length === 0) {
+                    document.getElementById('customerTableBody').innerHTML = `
+                        <tr><td colspan="7" style="text-align: center; color: #95A5B8; padding: 40px;">
+                            No customer data available for selected date range
+                        </td></tr>
+                    `;
+                    return;
+                }
+                
+                const tbody = document.getElementById('customerTableBody');
+                tbody.innerHTML = '';
+                
+                data.data.forEach(customer => {
+                    const d2cOtf = customer.D2C_OTF !== null ? `${customer.D2C_OTF.toFixed(1)}%` : '—';
+                    const b2bOtf = customer.B2B_OTF !== null ? `${customer.B2B_OTF.toFixed(1)}%` : '—';
+                    
+                    const statusEmoji = customer.STATUS === 'green' ? '✅' : 
+                                      customer.STATUS === 'yellow' ? '⚠️' : 
+                                      customer.STATUS === 'red' ? '🔴' : '⚪';
+                    
+                    const row = `
+                        <tr>
+                            <td>${customer.ACCOUNT_NAME}</td>
+                            <td class="number">${customer.TOTAL_ORDERS.toLocaleString()}</td>
+                            <td class="number">${customer.D2C_ORDERS.toLocaleString()}</td>
+                            <td class="number">${customer.B2B_ORDERS.toLocaleString()}</td>
+                            <td class="number">${d2cOtf}</td>
+                            <td class="number">${b2bOtf}</td>
+                            <td>${statusEmoji} ${customer.STATUS_TEXT}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+                
+                console.log(`✓ Loaded ${data.count} customer records`);
+            } catch (error) {
+                console.error('Customer breakdown failed:', error);
+                document.getElementById('customerTableBody').innerHTML = `
+                    <tr><td colspan="7" style="text-align: center; color: #DC2C2C; padding: 40px;">
+                        Error loading customer data: ${error.message}
+                    </td></tr>
                 `;
             }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', loadDashboardData);
-        setInterval(loadDashboardData, 15 * 60 * 1000);  // Auto-refresh every 15 minutes
+        function showInsufficientData(canvasId, dataType) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const parent = canvas.parentElement;
+            parent.innerHTML = `
+                <div class="insufficient-data">
+                    <div class="insufficient-data-icon">📊</div>
+                    <div class="insufficient-data-text">Insufficient Data</div>
+                    <div class="insufficient-data-subtext">No ${dataType} available for selected filters</div>
+                </div>
+            `;
+        }
+
+        function drillDown(metric) {
+            // Open modal with drill-down details
+            console.log('Drill down for metric:', metric);
+        }
+
+        function closeModal() {
+            document.getElementById('drillModal').classList.remove('active');
+        }
+
+        function exportData() {
+            alert('Export functionality - would generate PDF/CSV of current view with filters');
+        }
     </script>
 </body>
 </html>
