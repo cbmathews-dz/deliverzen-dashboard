@@ -56,11 +56,6 @@
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; }
         .status-passed { background: #E6F7EF; color: #0EA55B; }
         .status-failed { background: #FDE8E8; color: #DC2C2C; }
-        .expand-icon { cursor: pointer; user-select: none; font-size: 14px; margin-right: 8px; }
-        .customer-row { cursor: pointer; }
-        .customer-row:hover { background: #F5F8FD; }
-        .detail-row { background: #F5F8FD; display: none; }
-        .detail-row.expanded { display: table-row; }
         
         .loading { text-align: center; padding: 40px; color: #8494AC; }
         .spinner { border: 3px solid #E4ECF7; border-top: 3px solid #2B6CF4; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
@@ -154,8 +149,7 @@
         const API_BASE = 'https://deliverzen-ops-backend.azurewebsites.net/api';
         let currentTab = 'overview';
         let dailyChartInstance, monthlyChartInstance;
-        let expandedCustomers = new Set();
-        let orderDetails = {};
+        let customers = [];
         let sortColumn = null;
         let sortDirection = 'asc';
         
@@ -241,7 +235,6 @@
             document.getElementById('kpiSection').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                // Fetch both summary and daily data to calculate D2C/B2B totals
                 const [summaryResp, dailyResp] = await Promise.all([
                     fetch(`${API_BASE}/executive-summary?${params}`),
                     fetch(`${API_BASE}/orders-by-day?${params}`)
@@ -261,7 +254,6 @@
                 const d2cOtfPct = d2cOtf ? d2cOtf.value * 100 : null;
                 const b2bOtfPct = b2bOtf ? b2bOtf.value * 100 : null;
                 
-                // Calculate totals from daily data
                 let d2cTotal = 0;
                 let b2bTotal = 0;
                 if (dailyData.success && dailyData.data) {
@@ -310,7 +302,6 @@
                     if (dailyChartInstance) dailyChartInstance.destroy();
                     if (monthlyChartInstance) monthlyChartInstance.destroy();
                     
-                    // Format dates to remove timestamp
                     const formattedLabels = dailyData.data.map(d => {
                         const date = new Date(d.ORDER_DATE);
                         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -332,17 +323,8 @@
                         options: { 
                             responsive: true, 
                             maintainAspectRatio: true,
-                            plugins: {
-                                legend: { display: true }
-                            },
-                            scales: {
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45
-                                    }
-                                }
-                            }
+                            plugins: { legend: { display: true } },
+                            scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } }
                         }
                     });
                     
@@ -373,36 +355,20 @@
             document.getElementById('breakdownTable').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/outbound-breakdown?${params}&sla_status=all`;
+                const url = `${API_BASE}/customer-breakdown-summary?${params}`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
                 if (!data.success) throw new Error(data.error);
                 
-                const orders = data.data;
+                customers = data.data || [];
                 
-                if (orders.length === 0) {
+                if (customers.length === 0) {
                     document.getElementById('breakdownTable').innerHTML = '<div style="text-align:center; color:#8494AC; padding:40px;">No orders found</div>';
                     return;
                 }
                 
-                const customerGroups = {};
-                orders.forEach(order => {
-                    const cust = order.CUSTOMER_NAME || 'Unknown';
-                    if (!customerGroups[cust]) {
-                        customerGroups[cust] = { orders: [], passed: 0, failed: 0, total: 0 };
-                    }
-                    customerGroups[cust].orders.push(order);
-                    customerGroups[cust].total++;
-                    if (order.SLA_STATUS === 'PASSED') {
-                        customerGroups[cust].passed++;
-                    } else {
-                        customerGroups[cust].failed++;
-                    }
-                });
-                
-                orderDetails = customerGroups;
-                renderBreakdownTable(customerGroups);
+                renderBreakdownTable();
             } catch (error) {
                 document.getElementById('breakdownTable').innerHTML = `
                     <div style="color: #DC2C2C; text-align: center; padding: 40px;">
@@ -413,28 +379,24 @@
             }
         }
         
-        function renderBreakdownTable(customerGroups) {
-            let customers = Object.keys(customerGroups).map(name => ({
-                name,
-                total: customerGroups[name].total,
-                passed: customerGroups[name].passed,
-                failed: customerGroups[name].failed,
-                sla: ((customerGroups[name].passed / customerGroups[name].total) * 100).toFixed(2)
-            }));
+        function renderBreakdownTable() {
+            let customerList = [...customers];
             
             if (sortColumn !== null) {
-                customers.sort((a, b) => {
-                    let aVal = a[sortColumn];
-                    let bVal = b[sortColumn];
-                    if (sortColumn === 'sla' || sortColumn === 'total' || sortColumn === 'passed' || sortColumn === 'failed') {
-                        aVal = parseFloat(aVal);
-                        bVal = parseFloat(bVal);
-                    }
-                    if (sortDirection === 'asc') {
-                        return aVal > bVal ? 1 : -1;
-                    } else {
-                        return aVal < bVal ? 1 : -1;
-                    }
+                customerList.sort((a, b) => {
+                    let aVal = sortColumn === 'name' ? a.CUSTOMER_NAME :
+                               sortColumn === 'total' ? a.TOTAL_ORDERS :
+                               sortColumn === 'passed' ? a.PASSED_ORDERS :
+                               sortColumn === 'failed' ? a.FAILED_ORDERS :
+                               a.SLA_PERCENT;
+                    let bVal = sortColumn === 'name' ? b.CUSTOMER_NAME :
+                               sortColumn === 'total' ? b.TOTAL_ORDERS :
+                               sortColumn === 'passed' ? b.PASSED_ORDERS :
+                               sortColumn === 'failed' ? b.FAILED_ORDERS :
+                               b.SLA_PERCENT;
+                    
+                    if (typeof aVal === 'string') { aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase(); }
+                    return sortDirection === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
                 });
             }
             
@@ -452,40 +414,16 @@
                     <tbody>
             `;
             
-            customers.forEach(cust => {
-                const grp = customerGroups[cust.name];
+            customerList.forEach(cust => {
                 html += `
-                    <tr class="customer-row" onclick="toggleCustomer('${cust.name.replace(/'/g, "\\'")}')">
-                        <td>
-                            <span class="expand-icon" id="icon-${cust.name.replace(/[^a-zA-Z0-9]/g, '_')}">▶</span>
-                            <strong>${cust.name}</strong>
-                        </td>
-                        <td>${cust.total}</td>
-                        <td><span class="status-badge status-passed">${cust.passed}</span></td>
-                        <td><span class="status-badge status-failed">${cust.failed}</span></td>
-                        <td>${cust.sla}%</td>
+                    <tr>
+                        <td><strong>${cust.CUSTOMER_NAME}</strong></td>
+                        <td>${cust.TOTAL_ORDERS.toLocaleString()}</td>
+                        <td><span class="status-badge status-passed">${cust.PASSED_ORDERS.toLocaleString()}</span></td>
+                        <td><span class="status-badge status-failed">${cust.FAILED_ORDERS.toLocaleString()}</span></td>
+                        <td>${cust.SLA_PERCENT}%</td>
                     </tr>
                 `;
-                
-                grp.orders.forEach(order => {
-                    html += `
-                        <tr class="detail-row ${expandedCustomers.has(cust.name) ? 'expanded' : ''}" data-customer="${cust.name.replace(/'/g, "\\'")}">
-                            <td colspan="5" style="padding-left: 60px;">
-                                <table style="width:100%; border:none;">
-                                    <tr style="border:none;">
-                                        <td style="border:none; font-size:12px;"><strong>Order:</strong> ${order.ORDER_NUMBER}</td>
-                                        <td style="border:none; font-size:12px;"><strong>Type:</strong> ${order.ORDER_TYPE}</td>
-                                        <td style="border:none; font-size:12px;"><strong>Order Date:</strong> ${order.ORDER_DATE}</td>
-                                        <td style="border:none; font-size:12px;"><strong>Ship Date:</strong> ${order.SHIP_DATE || 'Not Shipped'}</td>
-                                        <td style="border:none; font-size:12px;"><strong>Expected:</strong> ${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
-                                        <td style="border:none; font-size:12px;"><strong>Cycle:</strong> ${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS + 'h' : '—'}</td>
-                                        <td style="border:none;"><span class="status-badge ${order.SLA_STATUS === 'PASSED' ? 'status-passed' : 'status-failed'}">${order.SLA_STATUS}</span></td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    `;
-                });
             });
             
             html += '</tbody></table>';
@@ -499,23 +437,7 @@
                 sortColumn = column;
                 sortDirection = 'asc';
             }
-            renderBreakdownTable(orderDetails);
-        }
-        
-        function toggleCustomer(custName) {
-            const safeId = custName.replace(/[^a-zA-Z0-9]/g, '_');
-            const icon = document.getElementById(`icon-${safeId}`);
-            const detailRows = document.querySelectorAll(`tr.detail-row[data-customer="${custName.replace(/'/g, "\\'")}"]`);
-            
-            if (expandedCustomers.has(custName)) {
-                expandedCustomers.delete(custName);
-                icon.textContent = '▶';
-                detailRows.forEach(row => row.classList.remove('expanded'));
-            } else {
-                expandedCustomers.add(custName);
-                icon.textContent = '▼';
-                detailRows.forEach(row => row.classList.add('expanded'));
-            }
+            renderBreakdownTable();
         }
         
         function createKPI(label, value, color) {
