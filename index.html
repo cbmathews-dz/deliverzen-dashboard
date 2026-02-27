@@ -79,6 +79,7 @@
     <div class="tabs">
         <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
         <button class="tab" onclick="switchTab('breakdown')">📦 Outbound Breakdown</button>
+        <button class="tab" onclick="switchTab('receiving')">📥 Receiving</button>
     </div>
     
     <div class="filters">
@@ -133,13 +134,23 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="tab-breakdown" class="tab-content content">
             <div class="table-container">
                 <div class="table-header">Customer SLA Performance</div>
                 <div id="breakdownTable" class="loading">
                     <div class="spinner"></div>
                     <div>Loading order data...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-receiving" class="tab-content content">
+            <div class="table-container">
+                <div class="table-header">Purchase Order Receiving</div>
+                <div id="receivingTable" class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading receiving data...</div>
                 </div>
             </div>
         </div>
@@ -206,6 +217,8 @@
                 await loadCharts();
             } else if (currentTab === 'breakdown') {
                 await loadBreakdown();
+            } else if (currentTab === 'receiving') {
+                await loadReceiving();
             }
         }
         
@@ -612,6 +625,167 @@
                     <div class="kpi-value" style="color: ${color}">${value || 'N/A'}</div>
                 </div>
             `;
+        }
+
+        // Add these functions to the dashboard JavaScript section
+
+        let poLineItems = {};
+
+        async function loadReceiving() {
+            const params = getDateParams();
+
+            document.getElementById('receivingTable').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
+
+            try {
+                const url = `${API_BASE}/receiving-summary?${params}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data.success) throw new Error(data.error);
+
+                const pos = data.data || [];
+
+                if (pos.length === 0) {
+                    document.getElementById('receivingTable').innerHTML = '<div style="text-align:center; color:#8494AC; padding:40px;">No receiving data found</div>';
+                    return;
+                }
+
+                renderReceivingTable(pos);
+            } catch (error) {
+                document.getElementById('receivingTable').innerHTML = `
+                    <div style="color: #DC2C2C; text-align: center; padding: 40px;">
+                        <div style="font-weight: 700; margin-bottom: 8px;">Error Loading Receiving Data</div>
+                        <div style="font-size: 13px;">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function togglePO(poNumber) {
+            const detailsRow = document.getElementById(`po-details-${poNumber.replace(/[^a-zA-Z0-9]/g, '_')}`);
+            const icon = document.getElementById(`po-icon-${poNumber.replace(/[^a-zA-Z0-9]/g, '_')}`);
+
+            if (!detailsRow) return;
+
+            const isExpanded = detailsRow.style.display === 'table-row';
+
+            if (isExpanded) {
+                detailsRow.style.display = 'none';
+                icon.textContent = '▶';
+                return;
+            }
+
+            // Load line items if not cached
+            if (!poLineItems[poNumber]) {
+                icon.textContent = '⏳';
+                detailsRow.innerHTML = '<td colspan="6" style="padding: 20px; text-align: center;"><div class="spinner" style="width: 30px; height: 30px;"></div></td>';
+                detailsRow.style.display = 'table-row';
+
+                try {
+                    const response = await fetch(`${API_BASE}/receiving-line-items?po_number=${poNumber}`);
+                    const data = await response.json();
+
+                    if (!data.success) throw new Error(data.error);
+
+                    poLineItems[poNumber] = data.data;
+                } catch (error) {
+                    icon.textContent = '▶';
+                    alert('Error loading line items: ' + error.message);
+                    detailsRow.style.display = 'none';
+                    return;
+                }
+            }
+
+            // Render line items
+            const lineItems = poLineItems[poNumber];
+            let html = `
+                <td colspan="6" style="padding: 10px 20px 10px 60px; background: #FAFBFC;">
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #F5F8FD;">
+                                    <th style="padding: 8px; font-size: 10px; text-align: left;">SKU</th>
+                                    <th style="padding: 8px; font-size: 10px; text-align: left;">Product Name</th>
+                                    <th style="padding: 8px; font-size: 10px; text-align: right;">Ordered</th>
+                                    <th style="padding: 8px; font-size: 10px; text-align: right;">Received</th>
+                                    <th style="padding: 8px; font-size: 10px; text-align: right;">Rejected</th>
+                                    <th style="padding: 8px; font-size: 10px; text-align: left;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            lineItems.forEach((item, idx) => {
+                const receivedPct = (item.QUANTITY_RECEIVED / item.QUANTITY_ORDERED * 100).toFixed(1);
+                html += `
+                    <tr style="background: ${idx % 2 === 0 ? '#FFF' : '#FAFBFC'};">
+                        <td style="padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">${item.SKU || 'N/A'}</td>
+                        <td style="padding: 8px;">${item.PRODUCT_NAME || 'N/A'}</td>
+                        <td style="padding: 8px; text-align: right;">${item.QUANTITY_ORDERED}</td>
+                        <td style="padding: 8px; text-align: right; ${receivedPct < 100 ? 'color: #D97B06;' : ''}">${item.QUANTITY_RECEIVED}</td>
+                        <td style="padding: 8px; text-align: right; ${item.QUANTITY_REJECTED > 0 ? 'color: #DC2C2C;' : ''}">${item.QUANTITY_REJECTED}</td>
+                        <td style="padding: 8px;">${item.LINE_STATUS || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+            `;
+
+            detailsRow.innerHTML = html;
+            detailsRow.style.display = 'table-row';
+            icon.textContent = '▼';
+        }
+
+        function renderReceivingTable(pos) {
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PO Number</th>
+                            <th>Vendor</th>
+                            <th>PO Date</th>
+                            <th>Line Items</th>
+                            <th>Qty Ordered</th>
+                            <th>Qty Received</th>
+                            <th>Receipt %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            pos.forEach(po => {
+                const safeId = po.PO_NUMBER.replace(/[^a-zA-Z0-9]/g, '_');
+                const receiptPct = po.RECEIPT_PERCENTAGE || 0;
+                const statusColor = receiptPct >= 100 ? '#0EA55B' : receiptPct >= 90 ? '#D97B06' : '#DC2C2C';
+
+                html += `
+                    <tr style="cursor: pointer;" onclick="togglePO('${po.PO_NUMBER.replace(/'/g, "\\'")}')">
+                        <td>
+                            <span class="expand-icon" id="po-icon-${safeId}">▶</span>
+                            <strong>${po.PO_NUMBER}</strong>
+                        </td>
+                        <td>${po.VENDOR_NAME || 'N/A'}</td>
+                        <td>${po.PO_DATE || 'N/A'}</td>
+                        <td>${po.TOTAL_LINE_ITEMS}</td>
+                        <td>${po.TOTAL_QUANTITY_ORDERED.toLocaleString()}</td>
+                        <td>${po.TOTAL_QUANTITY_RECEIVED.toLocaleString()}</td>
+                        <td style="color: ${statusColor}; font-weight: 700;">${receiptPct}%</td>
+                        <td>${po.PO_FULFILLMENT_STATUS || 'N/A'}</td>
+                    </tr>
+                    <tr id="po-details-${safeId}" style="display: none;">
+                        <td colspan="8"></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('receivingTable').innerHTML = html;
         }
     </script>
 </body>
