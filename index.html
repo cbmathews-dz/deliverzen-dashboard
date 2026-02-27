@@ -11,7 +11,6 @@
         body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; background: #E9F1FB; color: #0B1B3A; }
         .container { max-width: 1600px; margin: 0 auto; }
         
-        /* Header */
         .header { background: #0B1B3A; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
         .logo-section { display: flex; align-items: center; gap: 12px; }
         .logo { width: 30px; height: 30px; background: linear-gradient(135deg, #5A9CFE, #6DD5DB); border-radius: 6px; }
@@ -19,41 +18,39 @@
         .badge { font-size: 10px; background: rgba(43,108,244,0.2); color: #4A8AF7; padding: 3px 11px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
         .header-info { display: flex; align-items: center; gap: 20px; font-size: 12px; color: #8FA3C4; }
         
-        /* Tabs */
         .tabs { background: #FFF; border-bottom: 1px solid #D4DEF0; padding: 0 32px; display: flex; }
         .tab { background: transparent; color: #8494AC; border: none; border-bottom: 2.5px solid transparent; padding: 13px 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .tab:hover { color: #2B6CF4; }
         .tab.active { color: #2B6CF4; border-bottom-color: #2B6CF4; }
         
-        /* Filters */
         .filters { padding: 14px 32px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; background: #FFF; border-bottom: 1px solid #E4ECF7; }
         .filter-group { display: flex; flex-direction: column; gap: 4px; }
         .filter-group label { font-size: 10px; color: #8494AC; text-transform: uppercase; font-weight: 700; }
-        .filter-group select { background: #FFF; color: #0B1B3A; border: 1.5px solid #D4DEF0; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A5B78' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+        .filter-group select, .filter-group input { background: #FFF; color: #0B1B3A; border: 1.5px solid #D4DEF0; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .filter-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A5B78' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
         .btn-apply { background: #2B6CF4; color: #FFF; border: none; border-radius: 10px; padding: 9px 24px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; }
         
-        /* Content */
         .content { padding: 32px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* KPI Grid */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: #FFF; border-radius: 16px; padding: 20px; border: 1px solid #E4ECF7; position: relative; overflow: hidden; }
         .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--color, #2B6CF4); }
         .kpi-label { font-size: 11px; color: #8494AC; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #0B1B3A; margin-bottom: 8px; }
         
-        /* Charts */
         .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .chart-card { background: #FFF; border-radius: 16px; padding: 24px; border: 1px solid #E4ECF7; }
         .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
         
-        /* Table */
         .table-container { background: #FFF; border-radius: 16px; padding: 24px; border: 1px solid #E4ECF7; overflow-x: auto; }
         .table-header { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px 16px; font-size: 11px; color: #8494AC; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #E4ECF7; }
+        th { text-align: left; padding: 12px 16px; font-size: 11px; color: #8494AC; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #E4ECF7; cursor: pointer; user-select: none; }
+        th:hover { background: #F5F8FD; }
+        th.sort-asc::after { content: ' ▲'; color: #2B6CF4; }
+        th.sort-desc::after { content: ' ▼'; color: #2B6CF4; }
         td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid #F5F8FD; }
         tr:hover { background: #F5F8FD; }
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; }
@@ -65,14 +62,12 @@
         .detail-row { background: #F5F8FD; display: none; }
         .detail-row.expanded { display: table-row; }
         
-        /* Loading */
         .loading { text-align: center; padding: 40px; color: #8494AC; }
         .spinner { border: 3px solid #E4ECF7; border-top: 3px solid #2B6CF4; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <div class="logo-section">
             <div class="logo"></div>
@@ -86,13 +81,11 @@
         </div>
     </div>
     
-    <!-- Tabs -->
     <div class="tabs">
         <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
         <button class="tab" onclick="switchTab('breakdown')">📦 Outbound Breakdown</button>
     </div>
     
-    <!-- Filters -->
     <div class="filters">
         <div class="filter-group">
             <label>Customer</label>
@@ -101,6 +94,13 @@
             </select>
         </div>
         <div class="filter-group">
+            <label>Date Range</label>
+            <select id="dateRangeType" onchange="toggleCustomDates()">
+                <option value="preset">Preset Range</option>
+                <option value="custom">Custom Range</option>
+            </select>
+        </div>
+        <div class="filter-group" id="presetDaysFilter">
             <label>Days Back</label>
             <select id="daysFilter">
                 <option value="7">Last 7 Days</option>
@@ -110,12 +110,18 @@
                 <option value="90">Last 90 Days</option>
             </select>
         </div>
-        
+        <div class="filter-group" id="customStartDate" style="display:none;">
+            <label>Start Date</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="filter-group" id="customEndDate" style="display:none;">
+            <label>End Date</label>
+            <input type="date" id="endDate">
+        </div>
         <button class="btn-apply" onclick="loadData()">Apply Filters</button>
     </div>
     
     <div class="container">
-        <!-- OVERVIEW TAB -->
         <div id="tab-overview" class="tab-content active content">
             <div id="kpiSection" class="loading">
                 <div class="spinner"></div>
@@ -133,7 +139,6 @@
             </div>
         </div>
         
-        <!-- OUTBOUND BREAKDOWN TAB -->
         <div id="tab-breakdown" class="tab-content content">
             <div class="table-container">
                 <div class="table-header">Customer SLA Performance</div>
@@ -151,11 +156,27 @@
         let dailyChartInstance, monthlyChartInstance;
         let expandedCustomers = new Set();
         let orderDetails = {};
+        let sortColumn = null;
+        let sortDirection = 'asc';
         
         document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        // Set default dates
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        
         loadCustomers();
         loadData();
         setInterval(loadData, 900000);
+        
+        function toggleCustomDates() {
+            const type = document.getElementById('dateRangeType').value;
+            document.getElementById('presetDaysFilter').style.display = type === 'preset' ? 'flex' : 'none';
+            document.getElementById('customStartDate').style.display = type === 'custom' ? 'flex' : 'none';
+            document.getElementById('customEndDate').style.display = type === 'custom' ? 'flex' : 'none';
+        }
         
         function switchTab(tab) {
             currentTab = tab;
@@ -195,14 +216,33 @@
             }
         }
         
-        async function loadOverview() {
-            const days = document.getElementById('daysFilter').value;
+        function getDateParams() {
             const customer = document.getElementById('customerFilter').value;
+            const dateType = document.getElementById('dateRangeType').value;
+            let params = customer !== 'all' ? `&customer_id=${customer}` : '';
+            
+            if (dateType === 'preset') {
+                const days = document.getElementById('daysFilter').value;
+                params += `&days=${days}`;
+            } else {
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                if (start && end) {
+                    const daysDiff = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
+                    params += `&days=${daysDiff}`;
+                }
+            }
+            
+            return params;
+        }
+        
+        async function loadOverview() {
+            const params = getDateParams();
             
             document.getElementById('kpiSection').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/executive-summary?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}`;
+                const url = `${API_BASE}/executive-summary?${params.substring(1)}`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -222,8 +262,8 @@
                 
                 document.getElementById('kpiSection').innerHTML = `
                     <div class="kpi-grid">
-                        ${createKPI('D2C OTF %', d2cOtfPct?.toFixed(1) + '%', d2cOtfPct >= 95 ? '#0EA55B' : d2cOtfPct >= 90 ? '#D97B06' : '#DC2C2C')}
-                        ${createKPI('B2B OTF %', b2bOtfPct?.toFixed(1) + '%', b2bOtfPct >= 92 ? '#0EA55B' : b2bOtfPct >= 85 ? '#D97B06' : '#DC2C2C')}
+                        ${createKPI('D2C OTF %', d2cOtfPct !== null ? d2cOtfPct.toFixed(1) + '%' : 'N/A', d2cOtfPct >= 95 ? '#0EA55B' : d2cOtfPct >= 90 ? '#D97B06' : '#DC2C2C')}
+                        ${createKPI('B2B OTF %', b2bOtfPct !== null ? b2bOtfPct.toFixed(1) + '%' : 'N/A', b2bOtfPct >= 92 ? '#0EA55B' : b2bOtfPct >= 85 ? '#D97B06' : '#DC2C2C')}
                         ${createKPI('Total Orders', totalOrders.toLocaleString(), '#2B6CF4')}
                         ${createKPI('D2C Orders', d2cOrders.toLocaleString(), '#7C3AED')}
                         ${createKPI('B2B Orders', b2bOrders.toLocaleString(), '#0891B2')}
@@ -240,13 +280,12 @@
         }
         
         async function loadCharts() {
-            const days = document.getElementById('daysFilter').value;
-            const customer = document.getElementById('customerFilter').value;
+            const params = getDateParams();
             
             try {
                 const [dailyResp, monthlyResp] = await Promise.all([
-                    fetch(`${API_BASE}/orders-by-day?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}`),
-                    fetch(`${API_BASE}/orders-by-month?months=6${customer !== 'all' ? '&customer_id=' + customer : ''}`)
+                    fetch(`${API_BASE}/orders-by-day?${params.substring(1)}`),
+                    fetch(`${API_BASE}/orders-by-month?months=6${params.includes('customer_id') ? params.substring(params.indexOf('&customer_id')) : ''}`)
                 ]);
                 
                 const dailyData = await dailyResp.json();
@@ -267,10 +306,17 @@
                                 data: dailyData.data.map(d => d.TOTAL_ORDERS),
                                 borderColor: '#2B6CF4',
                                 backgroundColor: 'rgba(43,108,244,0.1)',
-                                tension: 0.4
+                                tension: 0.4,
+                                fill: true
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: true }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: true }
+                            }
+                        }
                     });
                     
                     monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
@@ -282,7 +328,11 @@
                                 { label: 'B2B', data: monthlyData.data.map(d => d.B2B_ORDERS), backgroundColor: '#0891B2' }
                             ]
                         },
-                        options: { responsive: true, maintainAspectRatio: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: true, 
+                            scales: { x: { stacked: true }, y: { stacked: true } } 
+                        }
                     });
                 }
             } catch (error) {
@@ -291,13 +341,12 @@
         }
         
         async function loadBreakdown() {
-            const days = document.getElementById('daysFilter').value;
-            const customer = document.getElementById('customerFilter').value;
+            const params = getDateParams();
             
             document.getElementById('breakdownTable').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/outbound-breakdown?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}&sla_status=all`;
+                const url = `${API_BASE}/outbound-breakdown?${params.substring(1)}&sla_status=all`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -310,7 +359,6 @@
                     return;
                 }
                 
-                // Group by customer
                 const customerGroups = {};
                 orders.forEach(order => {
                     const cust = order.CUSTOMER_NAME || 'Unknown';
@@ -326,64 +374,8 @@
                     }
                 });
                 
-                // Store for expansion
                 orderDetails = customerGroups;
-                
-                let html = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Customer Name</th>
-                                <th>Order Received</th>
-                                <th>Completed Orders</th>
-                                <th>Failed Orders</th>
-                                <th>Average SLA (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                Object.keys(customerGroups).sort().forEach(custName => {
-                    const grp = customerGroups[custName];
-                    const slaPercent = ((grp.passed / grp.total) * 100).toFixed(2);
-                    
-                    html += `
-                        <tr class="customer-row" onclick="toggleCustomer('${custName.replace(/'/g, "\\'")}')">
-                            <td>
-                                <span class="expand-icon" id="icon-${custName.replace(/[^a-zA-Z0-9]/g, '_')}">▶</span>
-                                <strong>${custName}</strong>
-                            </td>
-                            <td>${grp.total}</td>
-                            <td><span class="status-badge status-passed">${grp.passed}</span></td>
-                            <td><span class="status-badge status-failed">${grp.failed}</span></td>
-                            <td>${slaPercent}%</td>
-                        </tr>
-                    `;
-                    
-                    // Detail rows (hidden by default)
-                    grp.orders.forEach(order => {
-                        html += `
-                            <tr class="detail-row" data-customer="${custName.replace(/'/g, "\\'")}">
-                                <td colspan="5" style="padding-left: 60px;">
-                                    <table style="width:100%; border:none;">
-                                        <tr style="border:none;">
-                                            <td style="border:none; font-size:12px;"><strong>Order:</strong> ${order.ORDER_NUMBER}</td>
-                                            <td style="border:none; font-size:12px;"><strong>Type:</strong> ${order.ORDER_TYPE}</td>
-                                            <td style="border:none; font-size:12px;"><strong>Order Date:</strong> ${order.ORDER_DATE}</td>
-                                            <td style="border:none; font-size:12px;"><strong>Ship Date:</strong> ${order.SHIP_DATE || 'Not Shipped'}</td>
-                                            <td style="border:none; font-size:12px;"><strong>Expected:</strong> ${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
-                                            <td style="border:none; font-size:12px;"><strong>Cycle:</strong> ${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS + 'h' : '—'}</td>
-                                            <td style="border:none;"><span class="status-badge ${order.SLA_STATUS === 'PASSED' ? 'status-passed' : 'status-failed'}">${order.SLA_STATUS}</span></td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                });
-                
-                html += '</tbody></table>';
-                document.getElementById('breakdownTable').innerHTML = html;
+                renderBreakdownTable(customerGroups);
             } catch (error) {
                 document.getElementById('breakdownTable').innerHTML = `
                     <div style="color: #DC2C2C; text-align: center; padding: 40px;">
@@ -392,6 +384,96 @@
                     </div>
                 `;
             }
+        }
+        
+        function renderBreakdownTable(customerGroups) {
+            let customers = Object.keys(customerGroups).map(name => ({
+                name,
+                total: customerGroups[name].total,
+                passed: customerGroups[name].passed,
+                failed: customerGroups[name].failed,
+                sla: ((customerGroups[name].passed / customerGroups[name].total) * 100).toFixed(2)
+            }));
+            
+            // Sort if column selected
+            if (sortColumn !== null) {
+                customers.sort((a, b) => {
+                    let aVal = a[sortColumn];
+                    let bVal = b[sortColumn];
+                    if (sortColumn === 'sla' || sortColumn === 'total' || sortColumn === 'passed' || sortColumn === 'failed') {
+                        aVal = parseFloat(aVal);
+                        bVal = parseFloat(bVal);
+                    }
+                    if (sortDirection === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('name')" class="${sortColumn === 'name' ? 'sort-' + sortDirection : ''}">Customer Name</th>
+                            <th onclick="sortTable('total')" class="${sortColumn === 'total' ? 'sort-' + sortDirection : ''}">Order Received</th>
+                            <th onclick="sortTable('passed')" class="${sortColumn === 'passed' ? 'sort-' + sortDirection : ''}">Completed Orders</th>
+                            <th onclick="sortTable('failed')" class="${sortColumn === 'failed' ? 'sort-' + sortDirection : ''}">Failed Orders</th>
+                            <th onclick="sortTable('sla')" class="${sortColumn === 'sla' ? 'sort-' + sortDirection : ''}">Average SLA (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            customers.forEach(cust => {
+                const grp = customerGroups[cust.name];
+                html += `
+                    <tr class="customer-row" onclick="toggleCustomer('${cust.name.replace(/'/g, "\\'")}')">
+                        <td>
+                            <span class="expand-icon" id="icon-${cust.name.replace(/[^a-zA-Z0-9]/g, '_')}">▶</span>
+                            <strong>${cust.name}</strong>
+                        </td>
+                        <td>${cust.total}</td>
+                        <td><span class="status-badge status-passed">${cust.passed}</span></td>
+                        <td><span class="status-badge status-failed">${cust.failed}</span></td>
+                        <td>${cust.sla}%</td>
+                    </tr>
+                `;
+                
+                grp.orders.forEach(order => {
+                    html += `
+                        <tr class="detail-row ${expandedCustomers.has(cust.name) ? 'expanded' : ''}" data-customer="${cust.name.replace(/'/g, "\\'")}">
+                            <td colspan="5" style="padding-left: 60px;">
+                                <table style="width:100%; border:none;">
+                                    <tr style="border:none;">
+                                        <td style="border:none; font-size:12px;"><strong>Order:</strong> ${order.ORDER_NUMBER}</td>
+                                        <td style="border:none; font-size:12px;"><strong>Type:</strong> ${order.ORDER_TYPE}</td>
+                                        <td style="border:none; font-size:12px;"><strong>Order Date:</strong> ${order.ORDER_DATE}</td>
+                                        <td style="border:none; font-size:12px;"><strong>Ship Date:</strong> ${order.SHIP_DATE || 'Not Shipped'}</td>
+                                        <td style="border:none; font-size:12px;"><strong>Expected:</strong> ${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
+                                        <td style="border:none; font-size:12px;"><strong>Cycle:</strong> ${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS + 'h' : '—'}</td>
+                                        <td style="border:none;"><span class="status-badge ${order.SLA_STATUS === 'PASSED' ? 'status-passed' : 'status-failed'}">${order.SLA_STATUS}</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('breakdownTable').innerHTML = html;
+        }
+        
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            renderBreakdownTable(orderDetails);
         }
         
         function toggleCustomer(custName) {
