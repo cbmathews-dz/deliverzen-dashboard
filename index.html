@@ -203,16 +203,28 @@
                 
                 if (!data.success) throw new Error(data.error);
                 
-                const kpis = data.data;
+                // Parse the new API response format
+                const kpisArray = data.data;
+                const metadata = data.metadata;
+                
+                // Extract metrics from array
+                const d2cOtf = kpisArray.find(k => k.metric === 'D2C_OTF');
+                const b2bOtf = kpisArray.find(k => k.metric === 'B2B_OTF');
+                const overallOtf = kpisArray.find(k => k.metric === 'OTF');
+                
+                const d2cOtfPct = d2cOtf ? d2cOtf.value * 100 : null;
+                const b2bOtfPct = b2bOtf ? b2bOtf.value * 100 : null;
+                const d2cOrders = d2cOtf?.breakdown?.d2c_orders || 0;
+                const b2bOrders = b2bOtf?.breakdown?.b2b_orders || 0;
+                const totalOrders = metadata?.total_orders || 0;
                 
                 document.getElementById('kpiSection').innerHTML = `
                     <div class="kpi-grid">
-                        ${createKPI('D2C OTF %', kpis.d2c_otf_pct?.toFixed(1) + '%', kpis.d2c_otf_pct >= 95 ? '#0EA55B' : kpis.d2c_otf_pct >= 90 ? '#D97B06' : '#DC2C2C')}
-                        ${createKPI('B2B OTF %', kpis.b2b_otf_pct?.toFixed(1) + '%', kpis.b2b_otf_pct >= 92 ? '#0EA55B' : kpis.b2b_otf_pct >= 85 ? '#D97B06' : '#DC2C2C')}
-                        ${createKPI('Total Orders', kpis.total_orders?.toLocaleString(), '#2B6CF4')}
-                        ${createKPI('D2C Orders', kpis.d2c_orders?.toLocaleString(), '#7C3AED')}
-                        ${createKPI('B2B Orders', kpis.b2b_orders?.toLocaleString(), '#0891B2')}
-                        ${createKPI('On-Time Receipt %', kpis.on_time_receipt_pct?.toFixed(1) + '%', kpis.on_time_receipt_pct >= 95 ? '#0EA55B' : '#D97B06')}
+                        ${createKPI('D2C OTF %', d2cOtfPct?.toFixed(1) + '%', d2cOtfPct >= 95 ? '#0EA55B' : d2cOtfPct >= 90 ? '#D97B06' : '#DC2C2C')}
+                        ${createKPI('B2B OTF %', b2bOtfPct?.toFixed(1) + '%', b2bOtfPct >= 92 ? '#0EA55B' : b2bOtfPct >= 85 ? '#D97B06' : '#DC2C2C')}
+                        ${createKPI('Total Orders', totalOrders.toLocaleString(), '#2B6CF4')}
+                        ${createKPI('D2C Orders', d2cOrders.toLocaleString(), '#7C3AED')}
+                        ${createKPI('B2B Orders', b2bOrders.toLocaleString(), '#0891B2')}
                     </div>
                 `;
             } catch (error) {
