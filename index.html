@@ -161,7 +161,6 @@
         
         document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         
-        // Set default dates
         const today = new Date();
         const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
         document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
@@ -219,17 +218,17 @@
         function getDateParams() {
             const customer = document.getElementById('customerFilter').value;
             const dateType = document.getElementById('dateRangeType').value;
-            let params = customer !== 'all' ? `&customer_id=${customer}` : '';
+            let params = customer !== 'all' ? `customer_id=${customer}` : '';
             
             if (dateType === 'preset') {
                 const days = document.getElementById('daysFilter').value;
-                params += `&days=${days}`;
+                params += (params ? '&' : '') + `days=${days}`;
             } else {
                 const start = document.getElementById('startDate').value;
                 const end = document.getElementById('endDate').value;
                 if (start && end) {
                     const daysDiff = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
-                    params += `&days=${daysDiff}`;
+                    params += (params ? '&' : '') + `days=${daysDiff}`;
                 }
             }
             
@@ -242,31 +241,45 @@
             document.getElementById('kpiSection').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/executive-summary?${params.substring(1)}`;
-                const response = await fetch(url);
-                const data = await response.json();
+                // Fetch both summary and daily data to calculate D2C/B2B totals
+                const [summaryResp, dailyResp] = await Promise.all([
+                    fetch(`${API_BASE}/executive-summary?${params}`),
+                    fetch(`${API_BASE}/orders-by-day?${params}`)
+                ]);
                 
-                if (!data.success) throw new Error(data.error);
+                const summaryData = await summaryResp.json();
+                const dailyData = await dailyResp.json();
                 
-                const kpisArray = data.data;
-                const metadata = data.metadata;
+                if (!summaryData.success) throw new Error(summaryData.error);
+                
+                const kpisArray = summaryData.data;
+                const metadata = summaryData.metadata;
                 
                 const d2cOtf = kpisArray.find(k => k.metric === 'D2C_OTF');
                 const b2bOtf = kpisArray.find(k => k.metric === 'B2B_OTF');
                 
                 const d2cOtfPct = d2cOtf ? d2cOtf.value * 100 : null;
                 const b2bOtfPct = b2bOtf ? b2bOtf.value * 100 : null;
-                const d2cOrders = d2cOtf?.breakdown?.d2c_orders || 0;
-                const b2bOrders = b2bOtf?.breakdown?.b2b_orders || 0;
-                const totalOrders = metadata?.total_orders || 0;
+                
+                // Calculate totals from daily data
+                let d2cTotal = 0;
+                let b2bTotal = 0;
+                if (dailyData.success && dailyData.data) {
+                    dailyData.data.forEach(day => {
+                        d2cTotal += day.D2C_ORDERS || 0;
+                        b2bTotal += day.B2B_ORDERS || 0;
+                    });
+                }
+                
+                const totalOrders = metadata?.total_orders || (d2cTotal + b2bTotal);
                 
                 document.getElementById('kpiSection').innerHTML = `
                     <div class="kpi-grid">
                         ${createKPI('D2C OTF %', d2cOtfPct !== null ? d2cOtfPct.toFixed(1) + '%' : 'N/A', d2cOtfPct >= 95 ? '#0EA55B' : d2cOtfPct >= 90 ? '#D97B06' : '#DC2C2C')}
                         ${createKPI('B2B OTF %', b2bOtfPct !== null ? b2bOtfPct.toFixed(1) + '%' : 'N/A', b2bOtfPct >= 92 ? '#0EA55B' : b2bOtfPct >= 85 ? '#D97B06' : '#DC2C2C')}
                         ${createKPI('Total Orders', totalOrders.toLocaleString(), '#2B6CF4')}
-                        ${createKPI('D2C Orders', d2cOrders.toLocaleString(), '#7C3AED')}
-                        ${createKPI('B2B Orders', b2bOrders.toLocaleString(), '#0891B2')}
+                        ${createKPI('D2C Orders', d2cTotal.toLocaleString(), '#7C3AED')}
+                        ${createKPI('B2B Orders', b2bTotal.toLocaleString(), '#0891B2')}
                     </div>
                 `;
             } catch (error) {
@@ -284,8 +297,8 @@
             
             try {
                 const [dailyResp, monthlyResp] = await Promise.all([
-                    fetch(`${API_BASE}/orders-by-day?${params.substring(1)}`),
-                    fetch(`${API_BASE}/orders-by-month?months=6${params.includes('customer_id') ? params.substring(params.indexOf('&customer_id')) : ''}`)
+                    fetch(`${API_BASE}/orders-by-day?${params}`),
+                    fetch(`${API_BASE}/orders-by-month?months=6${params.includes('customer_id') ? '&' + params.split('&').find(p => p.startsWith('customer_id')) : ''}`)
                 ]);
                 
                 const dailyData = await dailyResp.json();
@@ -297,10 +310,16 @@
                     if (dailyChartInstance) dailyChartInstance.destroy();
                     if (monthlyChartInstance) monthlyChartInstance.destroy();
                     
+                    // Format dates to remove timestamp
+                    const formattedLabels = dailyData.data.map(d => {
+                        const date = new Date(d.ORDER_DATE);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    });
+                    
                     dailyChartInstance = new Chart(document.getElementById('dailyChart'), {
                         type: 'line',
                         data: {
-                            labels: dailyData.data.map(d => d.ORDER_DATE),
+                            labels: formattedLabels,
                             datasets: [{
                                 label: 'Total Orders',
                                 data: dailyData.data.map(d => d.TOTAL_ORDERS),
@@ -315,6 +334,14 @@
                             maintainAspectRatio: true,
                             plugins: {
                                 legend: { display: true }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
                             }
                         }
                     });
@@ -346,7 +373,7 @@
             document.getElementById('breakdownTable').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/outbound-breakdown?${params.substring(1)}&sla_status=all`;
+                const url = `${API_BASE}/outbound-breakdown?${params}&sla_status=all`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -395,7 +422,6 @@
                 sla: ((customerGroups[name].passed / customerGroups[name].total) * 100).toFixed(2)
             }));
             
-            // Sort if column selected
             if (sortColumn !== null) {
                 customers.sort((a, b) => {
                     let aVal = a[sortColumn];
