@@ -379,6 +379,134 @@
             }
         }
         
+        let expandedCustomers = {};
+        let customerOrders = {};
+        
+        async function toggleCustomer(customerName, accountId, customerId) {
+            const icon = document.getElementById(`icon-${accountId}`);
+            const passRow = document.getElementById(`pass-${accountId}`);
+            const failRow = document.getElementById(`fail-${accountId}`);
+            
+            // If already expanded, collapse
+            if (expandedCustomers[accountId]) {
+                passRow.style.display = 'none';
+                failRow.style.display = 'none';
+                icon.textContent = '▶';
+                expandedCustomers[accountId] = false;
+                return;
+            }
+            
+            // If not loaded yet, fetch data FOR THIS CUSTOMER ONLY
+            if (!customerOrders[accountId]) {
+                icon.textContent = '⏳';
+                
+                try {
+                    const dateType = document.getElementById('dateRangeType').value;
+                    let params = `customer_id=${customerId}`;
+                    
+                    if (dateType === 'preset') {
+                        const days = document.getElementById('daysFilter').value;
+                        params += `&days=${days}`;
+                    } else {
+                        const start = document.getElementById('startDate').value;
+                        const end = document.getElementById('endDate').value;
+                        if (start && end) {
+                            const daysDiff = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
+                            params += `&days=${daysDiff}`;
+                        }
+                    }
+                    
+                    // Fetch orders for THIS SPECIFIC CUSTOMER
+                    const detailUrl = `${API_BASE}/outbound-breakdown?${params}&sla_status=all`;
+                    const response = await fetch(detailUrl);
+                    const data = await response.json();
+                    
+                    if (!data.success) throw new Error(data.error);
+                    
+                    customerOrders[accountId] = data.data;
+                } catch (error) {
+                    icon.textContent = '▶';
+                    alert('Error loading order details: ' + error.message);
+                    return;
+                }
+            }
+            
+            // Expand
+            passRow.style.display = 'table-row';
+            failRow.style.display = 'table-row';
+            icon.textContent = '▼';
+            expandedCustomers[accountId] = true;
+        }
+        
+        async function togglePassFail(accountId, type) {
+            const row = document.getElementById(`${type}-details-${accountId}`);
+            const icon = document.getElementById(`${type}-icon-${accountId}`);
+            
+            if (!row) return;
+            
+            const isExpanded = row.style.display === 'table-row';
+            
+            if (isExpanded) {
+                row.style.display = 'none';
+                icon.textContent = '▶';
+            } else {
+                const orders = customerOrders[accountId].filter(o => 
+                    type === 'pass' ? o.SLA_STATUS === 'PASSED' : o.SLA_STATUS === 'FAILED'
+                );
+                
+                let html = `
+                    <td colspan="5" style="padding: 10px 20px 10px 80px; background: #FAFBFC;">
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #F5F8FD;">
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Order #</th>
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Type</th>
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Order Date</th>
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Ship Date</th>
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Expected Ship</th>
+                                        <th style="padding: 8px; font-size: 10px; text-align: left; border-bottom: 1px solid #E4ECF7;">Cycle Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                orders.slice(0, 100).forEach((order, idx) => {
+                    html += `
+                        <tr style="background: ${idx % 2 === 0 ? '#FFF' : '#FAFBFC'};">
+                            <td style="padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">${order.ORDER_NUMBER || 'N/A'}</td>
+                            <td style="padding: 8px;">${order.ORDER_TYPE}</td>
+                            <td style="padding: 8px;">${order.ORDER_DATE || 'N/A'}</td>
+                            <td style="padding: 8px; color: ${order.SHIP_DATE ? '#0B1B3A' : '#8494AC'};">${order.SHIP_DATE || 'Not Shipped'}</td>
+                            <td style="padding: 8px;">${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
+                            <td style="padding: 8px;">${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS + 'h' : '—'}</td>
+                        </tr>
+                    `;
+                });
+                
+                if (orders.length > 100) {
+                    html += `
+                        <tr>
+                            <td colspan="6" style="padding: 8px; text-align: center; color: #8494AC; font-style: italic;">
+                                Showing first 100 of ${orders.length} orders
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                `;
+                
+                row.innerHTML = html;
+                row.style.display = 'table-row';
+                icon.textContent = '▼';
+            }
+        }
+        
         function renderBreakdownTable() {
             let customerList = [...customers];
             
@@ -414,14 +542,51 @@
                     <tbody>
             `;
             
-            customerList.forEach(cust => {
+            customerList.forEach((cust, idx) => {
+                const accountId = cust.CUSTOMER_NAME.replace(/[^a-zA-Z0-9]/g, '_');
+                const customerId = cust.ACCOUNT_ID;
+                
+                // Customer row
                 html += `
-                    <tr>
-                        <td><strong>${cust.CUSTOMER_NAME}</strong></td>
+                    <tr style="cursor: pointer;" onclick="toggleCustomer('${cust.CUSTOMER_NAME.replace(/'/g, "\\'")}', '${accountId}', '${customerId}')">
+                        <td>
+                            <span class="expand-icon" id="icon-${accountId}">▶</span>
+                            <strong>${cust.CUSTOMER_NAME}</strong>
+                        </td>
                         <td>${cust.TOTAL_ORDERS.toLocaleString()}</td>
                         <td><span class="status-badge status-passed">${cust.PASSED_ORDERS.toLocaleString()}</span></td>
                         <td><span class="status-badge status-failed">${cust.FAILED_ORDERS.toLocaleString()}</span></td>
                         <td>${cust.SLA_PERCENT}%</td>
+                    </tr>
+                `;
+                
+                // Pass sub-row
+                html += `
+                    <tr id="pass-${accountId}" style="display: none; background: #F5F8FD; cursor: pointer;" onclick="togglePassFail('${accountId}', 'pass')">
+                        <td style="padding-left: 60px;">
+                            <span class="expand-icon" id="pass-icon-${accountId}">▶</span>
+                            <strong style="color: #0EA55B;">Pass</strong>
+                        </td>
+                        <td>${cust.PASSED_ORDERS.toLocaleString()}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr id="pass-details-${accountId}" style="display: none;">
+                        <td colspan="5"></td>
+                    </tr>
+                `;
+                
+                // Fail sub-row
+                html += `
+                    <tr id="fail-${accountId}" style="display: none; background: #F5F8FD; cursor: pointer;" onclick="togglePassFail('${accountId}', 'fail')">
+                        <td style="padding-left: 60px;">
+                            <span class="expand-icon" id="fail-icon-${accountId}">▶</span>
+                            <strong style="color: #DC2C2C;">Fail</strong>
+                        </td>
+                        <td>${cust.FAILED_ORDERS.toLocaleString()}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr id="fail-details-${accountId}" style="display: none;">
+                        <td colspan="5"></td>
                     </tr>
                 `;
             });
