@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deliverzen Operations Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; background: #E9F1FB; color: #0B1B3A; }
@@ -28,10 +29,8 @@
         .filters { padding: 14px 32px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; background: #FFF; border-bottom: 1px solid #E4ECF7; }
         .filter-group { display: flex; flex-direction: column; gap: 4px; }
         .filter-group label { font-size: 10px; color: #8494AC; text-transform: uppercase; font-weight: 700; }
-        .filter-group select, .filter-group input { background: #FFF; color: #0B1B3A; border: 1.5px solid #D4DEF0; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .filter-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A5B78' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+        .filter-group select { background: #FFF; color: #0B1B3A; border: 1.5px solid #D4DEF0; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A5B78' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
         .btn-apply { background: #2B6CF4; color: #FFF; border: none; border-radius: 10px; padding: 9px 24px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; }
-        .btn-apply:hover { background: #1E5ADB; }
         
         /* Content */
         .content { padding: 32px; }
@@ -44,7 +43,11 @@
         .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--color, #2B6CF4); }
         .kpi-label { font-size: 11px; color: #8494AC; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #0B1B3A; margin-bottom: 8px; }
-        .kpi-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        
+        /* Charts */
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .chart-card { background: #FFF; border-radius: 16px; padding: 24px; border: 1px solid #E4ECF7; }
+        .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
         
         /* Table */
         .table-container { background: #FFF; border-radius: 16px; padding: 24px; border: 1px solid #E4ECF7; overflow-x: auto; }
@@ -56,6 +59,11 @@
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; }
         .status-passed { background: #E6F7EF; color: #0EA55B; }
         .status-failed { background: #FDE8E8; color: #DC2C2C; }
+        .expand-icon { cursor: pointer; user-select: none; font-size: 14px; margin-right: 8px; }
+        .customer-row { cursor: pointer; }
+        .customer-row:hover { background: #F5F8FD; }
+        .detail-row { background: #F5F8FD; display: none; }
+        .detail-row.expanded { display: table-row; }
         
         /* Loading */
         .loading { text-align: center; padding: 40px; color: #8494AC; }
@@ -103,16 +111,6 @@
             </select>
         </div>
         
-        <!-- Breakdown-specific filters -->
-        <div class="filter-group" id="slaStatusFilter" style="display:none;">
-            <label>SLA Status</label>
-            <select id="slaStatus">
-                <option value="all">All Orders</option>
-                <option value="passed">Passed Only</option>
-                <option value="failed">Failed Only</option>
-            </select>
-        </div>
-        
         <button class="btn-apply" onclick="loadData()">Apply Filters</button>
     </div>
     
@@ -123,12 +121,22 @@
                 <div class="spinner"></div>
                 <div>Loading dashboard data...</div>
             </div>
+            <div class="chart-grid" id="chartSection" style="display:none;">
+                <div class="chart-card">
+                    <div class="chart-title">Daily Orders</div>
+                    <canvas id="dailyChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Monthly Orders</div>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
         </div>
         
         <!-- OUTBOUND BREAKDOWN TAB -->
         <div id="tab-breakdown" class="tab-content content">
             <div class="table-container">
-                <div class="table-header">Outbound Order Details</div>
+                <div class="table-header">Customer SLA Performance</div>
                 <div id="breakdownTable" class="loading">
                     <div class="spinner"></div>
                     <div>Loading order data...</div>
@@ -140,13 +148,13 @@
     <script>
         const API_BASE = 'https://deliverzen-ops-backend.azurewebsites.net/api';
         let currentTab = 'overview';
+        let dailyChartInstance, monthlyChartInstance;
+        let expandedCustomers = new Set();
+        let orderDetails = {};
         
-        // Initialize
         document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         loadCustomers();
         loadData();
-        
-        // Auto-refresh every 15 minutes
         setInterval(loadData, 900000);
         
         function switchTab(tab) {
@@ -155,10 +163,6 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
-            
-            // Show/hide breakdown-specific filters
-            document.getElementById('slaStatusFilter').style.display = tab === 'breakdown' ? 'flex' : 'none';
-            
             loadData();
         }
         
@@ -184,9 +188,10 @@
         
         async function loadData() {
             if (currentTab === 'overview') {
-                loadOverview();
+                await loadOverview();
+                await loadCharts();
             } else if (currentTab === 'breakdown') {
-                loadBreakdown();
+                await loadBreakdown();
             }
         }
         
@@ -194,7 +199,7 @@
             const days = document.getElementById('daysFilter').value;
             const customer = document.getElementById('customerFilter').value;
             
-            document.getElementById('kpiSection').innerHTML = '<div class="spinner"></div><div>Loading...</div>';
+            document.getElementById('kpiSection').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
                 const url = `${API_BASE}/executive-summary?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}`;
@@ -203,14 +208,11 @@
                 
                 if (!data.success) throw new Error(data.error);
                 
-                // Parse the new API response format
                 const kpisArray = data.data;
                 const metadata = data.metadata;
                 
-                // Extract metrics from array
                 const d2cOtf = kpisArray.find(k => k.metric === 'D2C_OTF');
                 const b2bOtf = kpisArray.find(k => k.metric === 'B2B_OTF');
-                const overallOtf = kpisArray.find(k => k.metric === 'OTF');
                 
                 const d2cOtfPct = d2cOtf ? d2cOtf.value * 100 : null;
                 const b2bOtfPct = b2bOtf ? b2bOtf.value * 100 : null;
@@ -237,15 +239,65 @@
             }
         }
         
+        async function loadCharts() {
+            const days = document.getElementById('daysFilter').value;
+            const customer = document.getElementById('customerFilter').value;
+            
+            try {
+                const [dailyResp, monthlyResp] = await Promise.all([
+                    fetch(`${API_BASE}/orders-by-day?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}`),
+                    fetch(`${API_BASE}/orders-by-month?months=6${customer !== 'all' ? '&customer_id=' + customer : ''}`)
+                ]);
+                
+                const dailyData = await dailyResp.json();
+                const monthlyData = await monthlyResp.json();
+                
+                if (dailyData.success && monthlyData.success) {
+                    document.getElementById('chartSection').style.display = 'grid';
+                    
+                    if (dailyChartInstance) dailyChartInstance.destroy();
+                    if (monthlyChartInstance) monthlyChartInstance.destroy();
+                    
+                    dailyChartInstance = new Chart(document.getElementById('dailyChart'), {
+                        type: 'line',
+                        data: {
+                            labels: dailyData.data.map(d => d.ORDER_DATE),
+                            datasets: [{
+                                label: 'Total Orders',
+                                data: dailyData.data.map(d => d.TOTAL_ORDERS),
+                                borderColor: '#2B6CF4',
+                                backgroundColor: 'rgba(43,108,244,0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: true }
+                    });
+                    
+                    monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: monthlyData.data.map(d => d.ORDER_MONTH),
+                            datasets: [
+                                { label: 'D2C', data: monthlyData.data.map(d => d.D2C_ORDERS), backgroundColor: '#7C3AED' },
+                                { label: 'B2B', data: monthlyData.data.map(d => d.B2B_ORDERS), backgroundColor: '#0891B2' }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading charts:', error);
+            }
+        }
+        
         async function loadBreakdown() {
             const days = document.getElementById('daysFilter').value;
             const customer = document.getElementById('customerFilter').value;
-            const slaStatus = document.getElementById('slaStatus').value;
             
-            document.getElementById('breakdownTable').innerHTML = '<div class="spinner"></div><div>Loading...</div>';
+            document.getElementById('breakdownTable').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
             
             try {
-                const url = `${API_BASE}/outbound-breakdown?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}&sla_status=${slaStatus}`;
+                const url = `${API_BASE}/outbound-breakdown?days=${days}${customer !== 'all' ? '&customer_id=' + customer : ''}&sla_status=all`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -254,52 +306,83 @@
                 const orders = data.data;
                 
                 if (orders.length === 0) {
-                    document.getElementById('breakdownTable').innerHTML = '<div style="text-align:center; color:#8494AC; padding:40px;">No orders found with selected filters</div>';
+                    document.getElementById('breakdownTable').innerHTML = '<div style="text-align:center; color:#8494AC; padding:40px;">No orders found</div>';
                     return;
                 }
+                
+                // Group by customer
+                const customerGroups = {};
+                orders.forEach(order => {
+                    const cust = order.CUSTOMER_NAME || 'Unknown';
+                    if (!customerGroups[cust]) {
+                        customerGroups[cust] = { orders: [], passed: 0, failed: 0, total: 0 };
+                    }
+                    customerGroups[cust].orders.push(order);
+                    customerGroups[cust].total++;
+                    if (order.SLA_STATUS === 'PASSED') {
+                        customerGroups[cust].passed++;
+                    } else {
+                        customerGroups[cust].failed++;
+                    }
+                });
+                
+                // Store for expansion
+                orderDetails = customerGroups;
                 
                 let html = `
                     <table>
                         <thead>
                             <tr>
-                                <th>Order Number</th>
-                                <th>Customer</th>
-                                <th>Type</th>
-                                <th>Order Date</th>
-                                <th>Ship Date</th>
-                                <th>Expected Ship</th>
-                                <th>Cycle Time (hrs)</th>
-                                <th>Status</th>
-                                <th>SLA Result</th>
+                                <th>Customer Name</th>
+                                <th>Order Received</th>
+                                <th>Completed Orders</th>
+                                <th>Failed Orders</th>
+                                <th>Average SLA (%)</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
                 
-                orders.forEach(order => {
+                Object.keys(customerGroups).sort().forEach(custName => {
+                    const grp = customerGroups[custName];
+                    const slaPercent = ((grp.passed / grp.total) * 100).toFixed(2);
+                    
                     html += `
-                        <tr>
-                            <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">${order.ORDER_NUMBER || 'N/A'}</td>
-                            <td>${order.CUSTOMER_NAME || 'Unknown'}</td>
-                            <td>${order.ORDER_TYPE}</td>
-                            <td>${order.ORDER_DATE || 'N/A'}</td>
-                            <td>${order.SHIP_DATE || '<span style="color:#8494AC;">Not Shipped</span>'}</td>
-                            <td>${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
-                            <td>${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS : '<span style="color:#8494AC;">—</span>'}</td>
-                            <td><span style="font-size:11px; color:#8494AC;">${order.FULFILLMENT_STATUS || 'pending'}</span></td>
-                            <td><span class="status-badge ${order.SLA_STATUS === 'PASSED' ? 'status-passed' : 'status-failed'}">${order.SLA_STATUS}</span></td>
+                        <tr class="customer-row" onclick="toggleCustomer('${custName.replace(/'/g, "\\'")}')">
+                            <td>
+                                <span class="expand-icon" id="icon-${custName.replace(/[^a-zA-Z0-9]/g, '_')}">▶</span>
+                                <strong>${custName}</strong>
+                            </td>
+                            <td>${grp.total}</td>
+                            <td><span class="status-badge status-passed">${grp.passed}</span></td>
+                            <td><span class="status-badge status-failed">${grp.failed}</span></td>
+                            <td>${slaPercent}%</td>
                         </tr>
                     `;
+                    
+                    // Detail rows (hidden by default)
+                    grp.orders.forEach(order => {
+                        html += `
+                            <tr class="detail-row" data-customer="${custName.replace(/'/g, "\\'")}">
+                                <td colspan="5" style="padding-left: 60px;">
+                                    <table style="width:100%; border:none;">
+                                        <tr style="border:none;">
+                                            <td style="border:none; font-size:12px;"><strong>Order:</strong> ${order.ORDER_NUMBER}</td>
+                                            <td style="border:none; font-size:12px;"><strong>Type:</strong> ${order.ORDER_TYPE}</td>
+                                            <td style="border:none; font-size:12px;"><strong>Order Date:</strong> ${order.ORDER_DATE}</td>
+                                            <td style="border:none; font-size:12px;"><strong>Ship Date:</strong> ${order.SHIP_DATE || 'Not Shipped'}</td>
+                                            <td style="border:none; font-size:12px;"><strong>Expected:</strong> ${order.EXPECTED_SHIP_DATE || 'N/A'}</td>
+                                            <td style="border:none; font-size:12px;"><strong>Cycle:</strong> ${order.CYCLE_TIME_HOURS !== null ? order.CYCLE_TIME_HOURS + 'h' : '—'}</td>
+                                            <td style="border:none;"><span class="status-badge ${order.SLA_STATUS === 'PASSED' ? 'status-passed' : 'status-failed'}">${order.SLA_STATUS}</span></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        `;
+                    });
                 });
                 
-                html += `
-                        </tbody>
-                    </table>
-                    <div style="margin-top: 16px; font-size: 12px; color: #8494AC;">
-                        Showing ${orders.length} orders
-                    </div>
-                `;
-                
+                html += '</tbody></table>';
                 document.getElementById('breakdownTable').innerHTML = html;
             } catch (error) {
                 document.getElementById('breakdownTable').innerHTML = `
@@ -308,6 +391,22 @@
                         <div style="font-size: 13px;">${error.message}</div>
                     </div>
                 `;
+            }
+        }
+        
+        function toggleCustomer(custName) {
+            const safeId = custName.replace(/[^a-zA-Z0-9]/g, '_');
+            const icon = document.getElementById(`icon-${safeId}`);
+            const detailRows = document.querySelectorAll(`tr.detail-row[data-customer="${custName.replace(/'/g, "\\'")}"]`);
+            
+            if (expandedCustomers.has(custName)) {
+                expandedCustomers.delete(custName);
+                icon.textContent = '▶';
+                detailRows.forEach(row => row.classList.remove('expanded'));
+            } else {
+                expandedCustomers.add(custName);
+                icon.textContent = '▼';
+                detailRows.forEach(row => row.classList.add('expanded'));
             }
         }
         
